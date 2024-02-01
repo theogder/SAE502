@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNMP Scanner</title>
+    <!-- Ajout du lien vers Bootstrap (à adapter en fonction de votre installation) -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="mb-4">SNMP Scanner</h1>
+        <!-- Formulaire pour saisir l'adresse IP -->
+        <form id="scanForm" method="post">
+            <div class="form-group">
+                <label for="ipAddress">Adresse IP :</label>
+                <input type="text" class="form-control" id="ipAddress" name="ipAddress" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Lancer le Scan</button>
+        </form>
+
+        <!-- Affichage des résultats du scan ici -->
+        <div id="scanResults" class="mt-4">
+            <!-- Les résultats seront ajoutés ici dynamiquement en utilisant JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // JavaScript pour gérer la soumission du formulaire et mettre à jour les résultats
+        document.getElementById('scanForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const ipAddress = document.getElementById('ipAddress').value;
+
+            // Appeler le script Python en utilisant une méthode appropriée (par exemple, AJAX)
+            // et mettre à jour la division "scanResults" avec les résultats.
+
+            // Exemple avec fetch :
+            fetch('/scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ipAddress: ipAddress }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Mettre à jour le HTML avec les résultats du scan
+                const resultsDiv = document.getElementById('scanResults');
+                resultsDiv.innerHTML = "<h2 class='mb-3'>Résultats du Scan</h2>";
+
+                // Afficher les résultats SNMP
+                for (const targetIp in data) {
+                    resultsDiv.innerHTML += `<h3 class='mb-2'>Résultats pour ${targetIp}</h3><ul class='list-group'>`;
+                    
+                    // Itérer à travers le tableau de résultats
+                    data[targetIp].forEach(result => {
+                        resultsDiv.innerHTML += `<li class='list-group-item'>${result.name} (${result.oid}) = ${result.value}</li>`;
+                    });
+
+                    resultsDiv.innerHTML += `</ul>`;
+                }
+            })
+            .catch(error => console.error('Erreur :', error));
+        });
+    </script>
+</body>
+</html>
