@@ -16,10 +16,10 @@ ssh_port = 22
 # Fonction pour effectuer la correspondance entre les OID et leurs significations
 def map_oid_to_name(oid):
     oid_mappings = {
-        '1.3.6.1.4.1.2021.10.1.3.3': 'CPU 15-Minute Load',
-        '1.3.6.1.4.1.2021.4.11.0': 'Total RAM Free',
-        '1.3.6.1.4.1.2021.4.5.0': 'Total RAM in machine'
-        # Ajoutez d'autres correspondances OID -> Signification au besoin
+        '1.3.6.1.4.1.2021.10.1.3.3': 'Charge CPU sur 15 minutes',
+        '1.3.6.1.4.1.2021.4.11.0': 'RAM totale libre',
+        '1.3.6.1.4.1.2021.4.5.0': 'RAM totale de la machine',
+        '1.3.6.1.4.1.2021.4.6.0': 'RAM totale utilisée'  # Ajoutez d'autres correspondances OID -> Signification au besoin
     }
 
     return oid_mappings.get(oid, f"Signification non définie pour l'OID {oid}")
@@ -29,6 +29,7 @@ def snmp_get(oids, target_ip):
     results = []
 
     for oid in oids:
+        # Récupérer les données SNMP pour chaque OID
         errorIndication, errorStatus, errorIndex, varBinds = next(
             getCmd(SnmpEngine(),
                    CommunityData(snmp_community),
@@ -37,7 +38,7 @@ def snmp_get(oids, target_ip):
                    ObjectType(ObjectIdentity(oid)))
         )
 
-        # Vérification des erreurs
+        # Vérifier les erreurs
         if errorIndication:
             print(f"Erreur d'indication pour {map_oid_to_name(oid)}: {errorIndication}")
         elif errorStatus:
@@ -54,24 +55,24 @@ def snmp_get(oids, target_ip):
     return results
 
 def ssh_execute_command(target_ip, command):
-    # Create an SSH client
+    # Créer un client SSH
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     try:
-        # Connect to the SSH server
+        # Se connecter au serveur SSH
         ssh.connect(target_ip, port=ssh_port, username=ssh_username, password=ssh_password)
 
-        # Execute the command
+        # Exécuter la commande
         stdin, stdout, stderr = ssh.exec_command(command)
 
-        # Get the command output
+        # Obtenir la sortie de la commande
         output = stdout.read().decode('utf-8')
 
         return output
 
     finally:
-        # Close the SSH connection
+        # Fermer la connexion SSH
         ssh.close()
 
 # Route pour servir la page HTML
@@ -87,11 +88,11 @@ def scan():
     oids_to_get = [
         '1.3.6.1.4.1.2021.10.1.3.3',
         '1.3.6.1.4.1.2021.4.11.0',
-        '1.3.6.1.4.1.2021.4.5.0'
+        '1.3.6.1.4.1.2021.4.5.0',
+        '1.3.6.1.4.1.2021.4.6.0'
     ]
 
     results = snmp_get(oids_to_get, target_ip)
-    print(results)
 
     return jsonify({target_ip: results})
 
@@ -99,8 +100,8 @@ def scan():
 @app.route('/ssh', methods=['POST'])
 def execute_ssh_command():
     target_ip = request.json.get('ipAddress')
-    ssh_command_output = ssh_execute_command(target_ip, 'ls')  # Exemple avec la commande 'ls'
-    print(ssh_command_output)
+    # Exécuter la commande SSH pour obtenir les informations sur les paquets installés
+    ssh_command_output = ssh_execute_command(target_ip, "dpkg -l | grep ^ii | awk '{print $2, $3}'")
 
     return jsonify({'ssh_command_output': ssh_command_output})
 
