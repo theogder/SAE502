@@ -20,7 +20,10 @@ def install_snmp_client():
         else:
             print("Erreur lors de l'installation du client SNMP:")
             print(install_process.stderr.decode('utf-8'))
-
+            
+        # Modifier le fichier snmpd.conf
+        modify_snmpd_conf()
+        
     except Exception as e:
         print(f"Une erreur s'est produite: {str(e)}")
 
@@ -29,5 +32,38 @@ if __name__ == "__main__":
         print("Ce script est conçu pour les systèmes basés sur Linux.")
         sys.exit(1)
 
+def modify_snmpd_conf():
+    try:
+        # Chemin du fichier snmpd.conf
+        snmpd_conf_path = "/etc/snmp/snmpd.conf"
+
+        # Nouveau contenu à ajouter
+        new_content = """
+# SECTION: System Information Setup
+sysLocation    Sitting on the Dock of the Bay
+sysContact     Me <me@example.org>
+sysServices    72
+
+# SECTION: Agent Operating Mode
+master  agentx
+agentaddress udp:161
+
+# SECTION: Access Control Setup
+view all included .1
+rocommunity6 public default -V all
+rocommunity public default -V all
+rouser authPrivUser authpriv -V all
+"""
+
+        # Supprimer et recréer le fichier snmpd.conf
+        with open(snmpd_conf_path, 'w') as file:
+            file.write(new_content)
+
+        print("Le fichier snmpd.conf a été modifié avec succès.")
+
+    except Exception as e:
+        print(f"Une erreur s'est produite lors de la modification de snmpd.conf: {str(e)}")
+
+    
     install_snmp_client()
 # Copyright © 2024 Groupe ILAN. Tous droits réservés.
