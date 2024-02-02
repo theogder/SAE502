@@ -19,9 +19,15 @@
             <button type="submit" class="btn btn-primary">Lancer le Scan</button>
         </form>
 
-        <!-- Affichage des résultats du scan ici -->
+        <!-- Affichage des résultats du scan SNMP ici -->
         <div id="scanResults" class="mt-4">
             <!-- Les résultats SNMP seront ajoutés ici dynamiquement en utilisant JavaScript -->
+        </div>
+
+        <!-- Barre de recherche pour les résultats SSH -->
+        <div class="form-group mt-4">
+            <label for="searchSshResults">Rechercher dans les résultats SSH :</label>
+            <input type="text" class="form-control" id="searchSshResults" placeholder="Entrez un terme de recherche">
         </div>
 
         <!-- Affichage du résultat de la commande SSH -->
@@ -80,7 +86,26 @@
                 // Mettre à jour le HTML avec le résultat de la commande SSH
                 const sshResultDiv = document.getElementById('sshResult');
                 sshResultDiv.innerHTML = `<h2 class='mb-3'>Résultat de la commande SSH</h2>`;
-                sshResultDiv.innerHTML += `<p>${data.ssh_command_output}</p>`;
+                
+                // Afficher les lignes du résultat de la commande SSH
+                const sshLines = data.ssh_command_output.split('\n');
+                sshLines.forEach(line => {
+                    sshResultDiv.innerHTML += `<p>${line}</p>`;
+                });
+
+                // Fonction de recherche pour filtrer les résultats SSH
+                document.getElementById('searchSshResults').addEventListener('input', function () {
+                    const searchTerm = this.value.toLowerCase();
+
+                    // Filtrer les lignes du résultat en fonction du terme de recherche
+                    const filteredLines = sshLines.filter(line => line.toLowerCase().includes(searchTerm));
+
+                    // Afficher les résultats filtrés
+                    sshResultDiv.innerHTML = `<h2 class='mb-3'>Résultat de la commande SSH</h2>`;
+                    filteredLines.forEach(line => {
+                        sshResultDiv.innerHTML += `<p>${line}</p>`;
+                    });
+                });
             })
             .catch(error => console.error('Erreur SSH :', error));
         });
